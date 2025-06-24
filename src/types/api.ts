@@ -178,6 +178,7 @@ export interface GameCompletedEvent {
   gameId: string;
   gameName: string;
   winnerPlayerId?: string;
+  WinnerPlayerName?: string;
   playerIds: string[];
   playerScores: Record<string, number>;
   endedAt: string;

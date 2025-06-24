@@ -26,9 +26,9 @@ import { useGame, useChoices, useMakeChoice, useGameResults } from '../../hooks/
 import { useSignalR } from '../../hooks/useSignalR';
 import { signalRService } from '../../services/signalr';
 import { useAppContext } from '../../contexts/AppContext';
-import { useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../hooks/useApi';
-import type { Choice, Game as GameType, RoundCompletedEvent, GameCompletedEvent } from '../../types/api';
+import type { Choice, Game as GameType, RoundCompletedEvent, GameCompletedEvent, MultiplayerResult, Player } from '../../types/api';
 
 interface GameProps {
   gameId: string;
@@ -103,7 +103,14 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect, disabled,
 interface GameCompletionDialogProps {
   open: boolean;
   gameCompleted: GameCompletedEvent | null;
-  game: GameType | null;
+  game: GameType | null; // Can be stale
+  gameResultsData: {
+    gameName: string;
+    endedAt?: string;
+    results: MultiplayerResult[];
+    players: Player[];
+    gameSummary: MultiplayerResult | null;
+  } | null;
   onClose: () => void;
 }
 
@@ -111,11 +118,27 @@ const GameCompletionDialog: React.FC<GameCompletionDialogProps> = ({
   open,
   gameCompleted,
   game,
+  gameResultsData,
   onClose,
 }) => {
-  if (!gameCompleted || !game) return null;
+  if (!gameCompleted && !gameResultsData) return null;
 
-  const winnerName = game.players.find(p => p.playerId === gameCompleted.winnerPlayerId)?.username;
+  // Use gameResultsData as the primary source of truth if available
+  const summary = gameResultsData?.gameSummary;
+  const players = gameResultsData?.players;
+  const gameName = gameResultsData?.gameName || game?.name;
+  const endedAt = gameResultsData?.endedAt || gameCompleted?.endedAt;
+
+  // Determine the winner's name
+  const winnerId = summary?.winnerId || gameCompleted?.winnerPlayerId;
+  const winnerName = winnerId && players 
+    ? players.find(p => p.id === winnerId)?.username
+    : game?.players.find(p => p.playerId === winnerId)?.username;
+
+  // Determine player scores
+  const playerScores = summary 
+    ? Object.entries(summary.playerValues)
+    : game ? Object.entries(game.players.reduce((acc, p) => ({ ...acc, [p.playerId]: p.score }), {} as Record<string, number>)) : [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -123,6 +146,7 @@ const GameCompletionDialog: React.FC<GameCompletionDialogProps> = ({
         🎉 Game Complete! 🎉
       </DialogTitle>
       <DialogContent sx={{ textAlign: 'center' }}>
+        {gameName && <Typography variant="h6" color="text.secondary">{gameName}</Typography>}
         {winnerName ? (
           <Typography variant="h4" color="success.main" gutterBottom>
             🏆 {winnerName} Wins! 🏆
@@ -133,17 +157,19 @@ const GameCompletionDialog: React.FC<GameCompletionDialogProps> = ({
           </Typography>
         )}
         
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Finished: {new Date(gameCompleted.endedAt).toLocaleString()}
-        </Typography>
+        {endedAt && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Finished: {new Date(endedAt).toLocaleString()}
+          </Typography>
+        )}
         
         <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
           <Typography variant="h6" gutterBottom>Final Scores</Typography>
-          {Object.entries(gameCompleted.playerScores)
+          {playerScores
             .sort(([, scoreA], [, scoreB]) => scoreB - scoreA) // Sort by score descending
             .map(([playerId, score]) => {
-              const player = game.players.find(p => p.playerId === playerId);
-              const isWinner = playerId === gameCompleted.winnerPlayerId;
+              const playerName = players?.find(p => p.id === playerId)?.username || game?.players.find(p => p.playerId === playerId)?.username || 'Unknown';
+              const isWinner = playerId === winnerId;
               return (
                 <Box 
                   key={playerId} 
@@ -157,7 +183,7 @@ const GameCompletionDialog: React.FC<GameCompletionDialogProps> = ({
                     fontWeight: isWinner ? 'bold' : 'normal',
                   }}
                 >
-                  <Typography fontWeight="inherit">{player?.username || 'Unknown'}</Typography>
+                  <Typography fontWeight="inherit">{playerName}</Typography>
                   <Typography fontWeight="inherit">{score}</Typography>
                 </Box>
               );
@@ -185,10 +211,13 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   // Control when the useGame query is active
   const isGameActive = !gameCompleted;
   
-  const { data: game, isLoading: gameLoading, error: gameError } = useGame(gameId, { enabled: isGameActive });
+  const { data: game, isLoading: gameLoading, error: gameError } = useGame(gameId, { 
+    enabled: isGameActive, 
+    placeholderData: keepPreviousData 
+  });
   const { data: choices = [] } = useChoices();
   const makeChoiceMutation = useMakeChoice();
-  const { data: gameResults } = useGameResults(gameId, { enabled: !!gameCompleted });
+  const { data: gameResultsData } = useGameResults(gameId, { enabled: !!gameCompleted });
 
   // Helper functions
   const getChoiceName = (choiceId: number) => {
@@ -196,7 +225,12 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   };
 
   const getPlayerName = (playerId: string) => {
-    return game?.players.find(p => p.playerId === playerId)?.username || 'Unknown';
+    // Try to get from the main game object first, which is most up-to-date during the game
+    const player = game?.players.find(p => p.playerId === playerId);
+    if (player) return player.username;
+    // Fallback to gameResultsData if the game is over
+    const resultPlayer = gameResultsData?.players.find(p => p.id === playerId);
+    return resultPlayer?.username || 'Unknown';
   };
   // SignalR event handlers
   const signalRHandlers = {
@@ -248,20 +282,51 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   const waitingForOthers = selectedChoice !== null && !currentRound?.completedAt;
   const isGameOver = !!gameCompleted;
 
-  if (gameLoading && !isGameOver) {
+  // The game object to use for rendering. It could be the live game data
+  // or the stale data kept after the game finished.
+  const displayGame = game;
+
+  if (gameLoading && !displayGame) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
         <CircularProgress />
       </Box>
     );
   }
-  if (gameError || !game) {
+  if (gameError && !displayGame) {
     return (
       <Alert severity="error">
-        Failed to load game. Please try again.
+        Failed to load game. It might be over. Check the home page for results.
       </Alert>
     );
-  }  return (
+  }
+
+  // If game is finished and we have no data at all, show a simple message.
+  if (isGameOver && !displayGame && !gameResultsData) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h5">Game Over</Typography>
+        <Typography color="text.secondary" sx={{ mb: 2 }}>
+          The game has finished. You can view results on the home page.
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/')}>Go Home</Button>
+      </Box>
+    );
+  }
+
+  // If the game is over but we still don't have the game object for some reason,
+  // we show a loading state while we fetch the results.
+  if (isGameOver && !displayGame && !gameResultsData) {
+      return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <Typography variant="h5">Game Over</Typography>
+              <Typography>Loading final results...</Typography>
+              <CircularProgress />
+          </Box>
+      );
+  }
+
+  return (
     <Box sx={{ 
       p: { xs: 1, sm: 2, md: 3 },
       width: '100%',
@@ -271,7 +336,7 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
       {/* Header with game name and leave button */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">
-          {game.name}
+          {displayGame?.name || gameResultsData?.gameName || 'Game'}
         </Typography>
         <Button
           variant="outlined"
@@ -284,45 +349,47 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
       </Box>
 
       {/* Game Status */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">
-            Round {game.currentRoundNumber}
-          </Typography>
-          <Chip 
-            label={game.status}
-            color={game.status === 'InProgress' ? 'success' : 'default'}
-          />
-        </Box>        {/* Players */}
-        <Box sx={{ 
-          display: 'grid',
-          gridTemplateColumns: { 
-            xs: '1fr', 
-            sm: 'repeat(2, 1fr)', 
-            md: 'repeat(3, 1fr)',
-            lg: 'repeat(4, 1fr)'
-          },
-          gap: { xs: 1, sm: 1.5, md: 2 }
-        }}>
-          {game.players.map((player) => (
-            <Box key={player.playerId}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Avatar sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}>
-                  {player.username.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                    {player.username}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                    Score: {player.score}
-                  </Typography>
+      {displayGame && (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">
+              Round {displayGame.currentRoundNumber}
+            </Typography>
+            <Chip 
+              label={isGameOver ? 'Finished' : displayGame.status}
+              color={isGameOver ? 'default' : displayGame.status === 'InProgress' ? 'success' : 'default'}
+            />
+          </Box>        {/* Players */}
+          <Box sx={{ 
+            display: 'grid',
+            gridTemplateColumns: { 
+              xs: '1fr', 
+              sm: 'repeat(2, 1fr)', 
+              md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)'
+            },
+            gap: { xs: 1, sm: 1.5, md: 2 }
+          }}>
+            {displayGame.players.map((player) => (
+              <Box key={player.playerId}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}>
+                    {player.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                      {player.username}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      Score: {player.score}
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          ))}
-        </Box>
-      </Paper>
+            ))}
+          </Box>
+        </Paper>
+      )}
 
       {/* Waiting indicator */}
       {waitingForOthers && !isGameOver && (
@@ -425,7 +492,8 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
       <GameCompletionDialog
         open={showGameComplete}
         gameCompleted={gameCompleted}
-        game={game ?? gameResults}
+        game={displayGame || null}
+        gameResultsData={gameResultsData || null}
         onClose={handleGameCompleteClose}
       />
     </Box>

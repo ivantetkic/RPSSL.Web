@@ -670,30 +670,7 @@ export const GameLobby: React.FC = () => {
           Checking backend connection...
         </Alert>
       )}
-        {/* Debug Panel - only in development */}
-      {import.meta.env.DEV && (
-        <Paper sx={{ p: 2, mb: 2, bgcolor: 'grey.50' }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Debug Info (Development Only)
-          </Typography>
-          <Box sx={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
-            <div>Current Player: {state.currentPlayer?.id || 'None'}</div>
-            <div>User Game IDs: [{Array.from(userGameIds).join(', ')}]</div>
-            <div>Recently Joined: [{Array.from(recentlyJoinedGames).join(', ')}]</div>
-            <div>Available Games: {gamesData.length}</div>
-            <div>Games Loading: {gamesLoading ? 'Yes' : 'No'}</div>
-            <div>Connection: {connectionStatus}</div>
-          </Box>
-          <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-            <Button size="small" onClick={addTestGame}>
-              Add Test Game
-            </Button>
-            <Button size="small" onClick={() => testNavigation('test-game-123')}>
-              Test Navigation
-            </Button>
-          </Box>
-        </Paper>
-      )}
+        
       
       {/* Authentication Check */}
       {!state.currentPlayer && (

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import type {
   CreatePlayerRequest,
@@ -7,6 +7,9 @@ import type {
   AddComputerPlayerRequest,
   UpdatePlayerStatusRequest,
   GameListItem,
+  Player,
+  Game,
+  MultiplayerResult,
 } from '../types/api';
 
 // Query Keys
@@ -103,15 +106,70 @@ export const useGames = (params?: {
   });
 };
 
-export const useGame = (gameId: string, options: { enabled?: boolean } = {}) => {
-  const { enabled = true } = options;
+export const useGame = (gameId: string, options: { enabled?: boolean, placeholderData?: typeof keepPreviousData } = {}) => {
+  const { enabled = true, placeholderData } = options;
   return useQuery({
     queryKey: queryKeys.game(gameId),
     queryFn: () => apiService.getGame(gameId),
     enabled: !!gameId && enabled,
     staleTime: 5000, // 5 seconds
+    placeholderData: placeholderData,
     // Only refetch if the game is active and the query is enabled
     refetchInterval: (query) => (enabled && query.state.data?.status === 'InProgress' ? 10000 : false),
+  });
+};
+
+export const useGameResults = (gameId: string, options: { enabled?: boolean } = {}) => {
+  const { enabled = true } = options;
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: queryKeys.gameResults(gameId),
+    queryFn: async () => {
+      const results = await apiService.getGameResults(gameId);
+      const gameFromCache = queryClient.getQueryData<Game>(queryKeys.game(gameId));
+
+      if (!results || results.length === 0) {
+        return {
+          gameName: gameFromCache?.name || 'Completed Game',
+          endedAt: gameFromCache?.endedAt,
+          results: [],
+          players: [],
+          gameSummary: null,
+        };
+      }
+
+      const gameSummary = results.find(r => r.resultType === 'GameSummary');
+      if (!gameSummary) {
+        return {
+          gameName: gameFromCache?.name || 'Completed Game',
+          endedAt: gameFromCache?.endedAt,
+          results,
+          players: [],
+          gameSummary: null,
+        };
+      }
+
+      const playerIds = Object.keys(gameSummary.playerValues);
+      const playerPromises = playerIds.map(id =>
+        apiService.getPlayerById(id).catch(e => {
+          console.error(`Failed to fetch player ${id}`, e);
+          return null;
+        })
+      );
+
+      const players = (await Promise.all(playerPromises)).filter(p => p !== null) as Player[];
+
+      return {
+        gameName: gameFromCache?.name || 'Completed Game',
+        endedAt: gameFromCache?.endedAt || gameSummary.createdAt,
+        results,
+        players,
+        gameSummary,
+      };
+    },
+    enabled: !!gameId && enabled,
+    staleTime: Infinity, // Results are final
   });
 };
 
@@ -239,16 +297,6 @@ export const useCancelGame = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.games() });
     },
-  });
-};
-
-export const useGameResults = (gameId: string, options: { enabled?: boolean } = {}) => {
-  const { enabled = true } = options;
-  return useQuery({
-    queryKey: queryKeys.gameResults(gameId),
-    queryFn: () => apiService.getGameResults(gameId),
-    enabled: !!gameId && enabled,
-    staleTime: 30000, // 30 seconds
   });
 };
 
