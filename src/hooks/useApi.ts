@@ -242,11 +242,12 @@ export const useCancelGame = () => {
   });
 };
 
-export const useGameResults = (gameId: string) => {
+export const useGameResults = (gameId: string, options: { enabled?: boolean } = {}) => {
+  const { enabled = true } = options;
   return useQuery({
     queryKey: queryKeys.gameResults(gameId),
     queryFn: () => apiService.getGameResults(gameId),
-    enabled: !!gameId,
+    enabled: !!gameId && enabled,
     staleTime: 30000, // 30 seconds
   });
 };

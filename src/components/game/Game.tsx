@@ -188,7 +188,7 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   const { data: game, isLoading: gameLoading, error: gameError } = useGame(gameId, { enabled: isGameActive });
   const { data: choices = [] } = useChoices();
   const makeChoiceMutation = useMakeChoice();
-  const { data: gameResults } = useGameResults(gameId);
+  const { data: gameResults } = useGameResults(gameId, { enabled: !!gameCompleted });
 
   // Helper functions
   const getChoiceName = (choiceId: number) => {
@@ -336,16 +336,17 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
           </Typography>
         </Paper>
       )}      {/* Choice Selection */}
-      {!waitingForOthers && !isGameOver && (
-        <Paper sx={{ p: 3 }}>
+      {!waitingForOthers && (
+        <Paper sx={{ p: 3, opacity: isGameOver ? 0.6 : 1, transition: 'opacity 0.3s' }}>
           <Typography variant="h5" gutterBottom textAlign="center">
-            Make Your Choice
-          </Typography>          <Box sx={{ 
+            {isGameOver ? 'Game Over' : 'Make Your Choice'}
+          </Typography>
+          <Box sx={{
             display: 'grid',
-            gridTemplateColumns: { 
-              xs: 'repeat(2, 1fr)', 
-              sm: 'repeat(3, 1fr)', 
-              md: 'repeat(5, 1fr)' 
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(5, 1fr)'
             },
             gap: { xs: 1, sm: 1.5, md: 2 },
             width: '100%',
