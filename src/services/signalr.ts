@@ -72,6 +72,7 @@ class SignalRService {
     });
 
     this.connection.on('GameCompleted', (event: GameCompletedEvent) => {
+      console.log('📡 SignalR: GameCompleted event (PascalCase) received:', event);
       this.handlers.onGameCompleted?.(event);
     });
 
