@@ -1,0 +1,460 @@
+/* Complete CSS Reset and Full Width Enforcement */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  width: 100%;
+  min-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
+}
+
+#root {
+  width: 100vw !important;
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Aggressive Material-UI overrides */
+.MuiContainer-root,
+.MuiContainer-maxWidthXs,
+.MuiContainer-maxWidthSm,
+.MuiContainer-maxWidthMd,
+.MuiContainer-maxWidthLg,
+.MuiContainer-maxWidthXl {
+  max-width: none !important;
+  width: 100vw !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Override all possible MUI width constraints */
+.MuiBox-root {
+  max-width: none !important;
+}
+
+/* Additional aggressive width overrides */
+.MuiBox-root,
+.MuiStack-root,
+.MuiGrid-root,
+.MuiGrid-container,
+.MuiGrid-item {
+  max-width: none !important;
+}
+
+/* Don't force Paper to full width - let components control their own width */
+.MuiPaper-root {
+  max-width: none;
+}
+
+/* Override any remaining Material-UI component width constraints */
+.MuiPaper-root:not(.MuiDialog-paper) {
+  width: 100% !important;
+}
+
+/* Ensure AppBar takes full width */
+.MuiAppBar-root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+.MuiToolbar-root {
+  width: 100% !important;
+  max-width: none !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Force main content to full width */
+main {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure all main layout elements use full width */
+[role="main"],
+main,
+.main-content {
+  width: 100vw !important;
+  max-width: 100vw !important;
+}
+
+/* Force specific components to full width */
+.MuiCardContent-root,
+.MuiCardActions-root {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Typography width overrides */
+.MuiTypography-root {
+  max-width: none !important;
+}
+
+/* Remove any potential width constraints from Layout components */
+.layout-container,
+.page-container,
+.content-container {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Override any dialog width constraints */
+.MuiDialog-paper {
+  max-width: 95vw !important;
+  width: auto !important;
+}
+
+/* Ensure AppBar takes full width */
+.MuiAppBar-root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+.MuiToolbar-root {
+  width: 100% !important;
+  max-width: none !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Force main content to full width */
+main {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Container for main content with responsive padding */
+.main-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0.5rem;
+}
+
+/* Mobile-first responsive padding */
+@media (min-width: 480px) {
+  .main-container {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-container {
+    padding: 2rem;
+  }
+}
+
+/* Card styling improvements */
+.card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Game-specific responsive classes */
+.game-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .game-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Choice buttons responsive grid */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 480px) {
+  .choice-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .choice-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Responsive text sizing */
+.responsive-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .responsive-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+}
+
+/* Player list responsive layout */
+.player-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .player-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .player-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .player-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Round results responsive layout */
+.round-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .round-results {
+    max-height: 400px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .round-results {
+    max-height: 500px;
+  }
+}
+
+/* FAB (Floating Action Button) responsive positioning */
+.fab-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+@media (min-width: 768px) {
+  .fab-container {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fab-container {
+    bottom: 2rem;
+    right: 2rem;
+  }
+}
+
+/* Dialog responsive width */
+.responsive-dialog {
+  width: 95vw;
+}
+
+@media (min-width: 768px) {
+  .responsive-dialog {
+    width: 80vw;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-dialog {
+    width: 60vw;
+  }
+}
+
+/* Utility classes for spacing */
+.spacing-xs { margin: 0.25rem; }
+.spacing-sm { margin: 0.5rem; }
+.spacing-md { margin: 1rem; }
+.spacing-lg { margin: 1.5rem; }
+.spacing-xl { margin: 2rem; }
+
+.padding-xs { padding: 0.25rem; }
+.padding-sm { padding: 0.5rem; }
+.padding-md { padding: 1rem; }
+.padding-lg { padding: 1.5rem; }
+.padding-xl { padding: 2rem; }
+
+/* Hide scrollbar but keep functionality */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 155, 155, 0.8);
+}
+
+/* Logo and animation styles (keeping existing) */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    height: 4em;
+    padding: 1em;
+  }
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Global width debugging and fix */
+* {
+  max-width: none !important;
+}
+
+html, body, #root {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  min-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Force all containers to full width */
+.MuiContainer-root, 
+.MuiContainer-maxWidthXs, 
+.MuiContainer-maxWidthSm, 
+.MuiContainer-maxWidthMd, 
+.MuiContainer-maxWidthLg, 
+.MuiContainer-maxWidthXl,
+.MuiPaper-root,
+.MuiBox-root,
+.MuiStack-root,
+.MuiGrid-root {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Debug utility - temporarily apply to identify width constraints */
+.debug-width {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 2px solid red !important;
+}
