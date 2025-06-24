@@ -270,7 +270,6 @@ interface RecentGameResultsProps {
 
 const RecentGameResults: React.FC<RecentGameResultsProps> = ({ results, loading }) => {
 
-    console.log('RecentGameResults', { results, loading });
   if (loading) {
     return (
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -302,12 +301,12 @@ const RecentGameResults: React.FC<RecentGameResultsProps> = ({ results, loading 
       <Typography variant="h6" gutterBottom>
         Recent Game Results
       </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 300, overflowY: 'auto' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, overflowY: 'auto' }}>
         {results.map((result, index) => (
-          <Card key={`${result.id}-${index}`} variant="outlined" sx={{ p: 1 }}>
+          <Card key={`${result.id}-${index}`} variant="outlined" sx={{px:1.5, pt: 0.5}}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
-                <Typography variant="body2" fontWeight="bold">
+                <Typography variant="body2" fontWeight="bold" >
                   {result.winnerUsername ? `🏆 ${result.winnerUsername} won` : 'Tie game'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">

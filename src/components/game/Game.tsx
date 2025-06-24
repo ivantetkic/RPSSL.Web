@@ -218,7 +218,15 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   });
   const { data: choices = [] } = useChoices();
   const makeChoiceMutation = useMakeChoice();
-  const { data: gameResultsData } = useGameResults(gameId, { enabled: !!gameCompleted });
+  const { data: gameResultsData, isLoading: gameResultsLoading } = useGameResults(gameId, { enabled: !!gameCompleted });
+
+  // Show the completion dialog only when the results have been fetched
+  React.useEffect(() => {
+    if (gameCompleted && gameResultsData && !gameResultsLoading) {
+      setShowGameComplete(true);
+    }
+  }, [gameCompleted, gameResultsData, gameResultsLoading]);
+
 
   const getPlayerName = (playerId: string) => {
     // Try to get from the main game object first, which is most up-to-date during the game
@@ -240,7 +248,6 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
       console.log('Game completed event received:', event);
       if (event.gameId === gameId) {
         setGameCompleted(event);
-        setShowGameComplete(true);
         // Invalidate the specific game query to stop fetching it
         queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       }
