@@ -190,7 +190,7 @@ export interface RoundCompletedEvent {
   roundId: string;
   roundNumber: number;
   winnerId?: string;
-  playerChoices: Record<string, number>;
+  playerChoices: Record<string, Choice>;
   resultDescription: string;
   completedAt: string;
 }

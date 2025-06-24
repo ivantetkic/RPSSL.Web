@@ -9,7 +9,6 @@ import type {
   GameListItem,
   Player,
   Game,
-  MultiplayerResult,
 } from '../types/api';
 
 // Query Keys

@@ -648,23 +648,6 @@ export const GameLobby: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
   
-  // Test navigation function for development
-  const testNavigation = React.useCallback((gameId: string) => {
-    if (import.meta.env.DEV) {
-      console.log('🧪 Test navigation to game:', gameId);
-      navigate(`/game/${gameId}`);
-    }
-  }, [navigate]);
-  
-  // Add test buttons in development mode
-  const addTestGame = React.useCallback(() => {
-    if (import.meta.env.DEV && state.currentPlayer) {
-      const testGameId = `test-game-${Date.now()}`;
-      console.log('🧪 Adding test game for navigation:', testGameId);
-      setUserGameIds(prev => new Set([...prev, testGameId]));
-      setRecentlyJoinedGames(prev => new Set([...prev, testGameId]));
-    }
-  }, [state.currentPlayer]);
   
   return (    
   <Box sx={{ 

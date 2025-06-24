@@ -208,6 +208,7 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
+
   // Control when the useGame query is active
   const isGameActive = !gameCompleted;
   
@@ -218,11 +219,6 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
   const { data: choices = [] } = useChoices();
   const makeChoiceMutation = useMakeChoice();
   const { data: gameResultsData } = useGameResults(gameId, { enabled: !!gameCompleted });
-
-  // Helper functions
-  const getChoiceName = (choiceId: number) => {
-    return choices.find(c => c.id === choiceId)?.name || 'Unknown';
-  };
 
   const getPlayerName = (playerId: string) => {
     // Try to get from the main game object first, which is most up-to-date during the game
@@ -241,6 +237,7 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
       }
     },
     onGameCompleted: (event: GameCompletedEvent) => {
+      console.log('Game completed event received:', event);
       if (event.gameId === gameId) {
         setGameCompleted(event);
         setShowGameComplete(true);
@@ -458,13 +455,13 @@ export const Game: React.FC<GameProps> = ({ gameId }) => {
                   gap: { xs: 1, sm: 1.5, md: 2 }, 
                   mb: 2 
                 }}>
-                  {Object.entries(result.playerChoices).map(([playerId, choiceId]) => (
+                  {Object.entries(result.playerChoices).map(([playerId, choice]) => (
                     <Card key={playerId} variant="outlined" sx={{ p: 1 }}>
                       <Typography variant="subtitle2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                         {getPlayerName(playerId)}
                       </Typography>
                       <Typography variant="body1" color="primary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                        {getChoiceName(choiceId as number)}
+                        {choice.name}
                       </Typography>
                     </Card>
                   ))}
