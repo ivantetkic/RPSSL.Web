@@ -146,6 +146,7 @@ interface GameCardProps {
   onAddComputer: (gameId: string) => void;
   isAddingComputer: boolean;
   canAddComputer: boolean;
+  isPlayerInGame: boolean;
 }
 
 const GameCard: React.FC<GameCardProps> = ({ 
@@ -155,7 +156,8 @@ const GameCard: React.FC<GameCardProps> = ({
   isJoining, 
   onAddComputer, 
   isAddingComputer, 
-  canAddComputer 
+  canAddComputer, 
+  isPlayerInGame
 }) => {  const { state } = useAppContext();
   const isCreator = state.currentPlayer && game.creatorId === state.currentPlayer.id;
   const getStatusColor = (status: string) => {
@@ -214,6 +216,7 @@ const GameCard: React.FC<GameCardProps> = ({
         
       </CardContent>      
       <CardActions sx={{ gap: 1, flexDirection: 'column', alignItems: 'stretch' }}>
+        {/* Action for users who can join */}
         {canJoin && (
           <Button
             size="small"
@@ -225,23 +228,34 @@ const GameCard: React.FC<GameCardProps> = ({
             {isJoining ? 'Joining...' : 'Join Game'}
           </Button>
         )}
-          {/* Only show Add Computer button to game creators */}
-        {canAddComputer && isCreator && (
-          <Button
-            size="small"
-            variant="contained"
-            color="secondary"
-            startIcon={isAddingComputer ? <CircularProgress size={16} /> : <SmartToyIcon />}
-            onClick={() => onAddComputer(game.id)}
-            disabled={isAddingComputer}
-          >
-            {isAddingComputer ? 'Adding...' : 'Add Computer Player'}
-          </Button>
+
+        {/* Actions for the game creator */}
+        {isCreator && game.status === 'Waiting' && (
+          <>
+            {canAddComputer && (
+              <Button
+                size="small"
+                variant="contained"
+                color="secondary"
+                startIcon={isAddingComputer ? <CircularProgress size={16} /> : <SmartToyIcon />}
+                onClick={() => onAddComputer(game.id)}
+                disabled={isAddingComputer}
+              >
+                {isAddingComputer ? 'Adding...' : 'Add Computer Player'}
+              </Button>
+            )}
+            {!canAddComputer && (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 1 }}>
+                Waiting for players to join...
+              </Typography>
+            )}
+          </>
         )}
-        
-        {!canJoin && !canAddComputer && isCreator && game.status === 'Waiting' && (
+
+        {/* Message for players who have already joined */}
+        {!isCreator && isPlayerInGame && game.status === 'Waiting' && (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 1 }}>
-            Waiting for players to join your game
+            Waiting for game to start...
           </Typography>
         )}
       </CardActions>
@@ -588,11 +602,15 @@ export const GameLobby: React.FC = () => {
   };
   
   const canJoinGame = (game: GameListItem) => {
+    // User cannot join if they are not logged in or are already in the game (as creator or player)
+    if (!state.currentPlayer || userGameIds.has(game.id)) {
+      return false;
+    }
+    
     return (
       game.status === 'Waiting' &&
       game.playerCount < game.maxPlayers &&
-      state.currentPlayer &&
-      game.creatorId !== state.currentPlayer.id // Can't join your own game
+      game.creatorId !== state.currentPlayer.id
     );
   };
 
@@ -758,6 +776,7 @@ export const GameLobby: React.FC = () => {
                 onAddComputer={handleAddComputer}
                 isAddingComputer={addComputerMutation.isPending}
                 canAddComputer={!!canAddComputer(game)}
+                isPlayerInGame={userGameIds.has(game.id)}
               />
             ))}
           </Box>
