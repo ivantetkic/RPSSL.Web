@@ -157,7 +157,7 @@ The application listens for these real-time events:
 - **Theme Toggle** - Switch between dark and light modes
 - **Floating Action Button** - Quick access to primary actions
 
-## 🛠️ Development
+## 🛠️ Development 
 
 ### Scripts
 
