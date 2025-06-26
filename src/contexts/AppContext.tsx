@@ -123,8 +123,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } else {
       localStorage.removeItem('rpssl-current-player');
     }
-  }, [state.currentPlayer]);
-  // Initialize SignalR connection
+  }, [state.currentPlayer]);  // Initialize SignalR connection
   useEffect(() => {
     if (state.isAuthenticated && !state.signalRConnected) {
       signalRService.setEventHandlers({        onConnectionStateChanged: (connectionState) => {
@@ -163,7 +162,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         signalRService.removeEventHandlers();
       }
     };
-  }, [state.isAuthenticated, state.signalRConnected]);
+  }, [state.isAuthenticated, state.signalRConnected, state.currentPlayer]);
 
   const actions = {
     setCurrentPlayer: (player: Player | undefined) => {
@@ -187,10 +186,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
     <AppContext.Provider value={{ state, dispatch, actions }}>
       {children}
-    </AppContext.Provider>
-  );
+    </AppContext.Provider>  );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAppContext = (): AppContextType => {
   const context = useContext(AppContext);
   if (!context) {

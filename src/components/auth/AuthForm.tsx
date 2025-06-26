@@ -126,7 +126,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
               )
             }
           >
-            {createPlayerMutation.isPending ? 'Creating Player...' : 'Join Game'}
+            {createPlayerMutation.isPending ? 'Creating Player...' : 'Join'}
           </Button>
         </Box>
 

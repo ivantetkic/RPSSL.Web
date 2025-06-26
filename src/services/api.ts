@@ -20,7 +20,10 @@ import type {
 } from '../types/api';
 
 // Base API configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7001/api';
+const baseHost = import.meta.env.VITE_BASE_URL || 'VITE_BASE_URL_PLACEHOLDER';
+const API_BASE_URL = (baseHost.startsWith('http') ? baseHost : `http://${baseHost}`) + '/api';
+
+
 const IS_DEVELOPMENT = import.meta.env.DEV;
 
 // Mock data for development when backend is unavailable

@@ -45,7 +45,9 @@ class SignalRService {
   }
 
   private initializeConnection(): void {
-    const hubUrl = import.meta.env.VITE_SIGNALR_HUB_URL || 'https://localhost:7001/gameHub';
+
+    const baseHost = import.meta.env.VITE_BASE_URL || 'VITE_BASE_URL_PLACEHOLDER';
+    const hubUrl = (baseHost.startsWith('http') ? baseHost : `http://${baseHost}`) + '/gameHub';
     
     this.connection = new HubConnectionBuilder()
       .withUrl(hubUrl)

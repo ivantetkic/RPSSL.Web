@@ -727,16 +727,7 @@ export const GameLobby: React.FC = () => {
             </Typography>
             <Typography variant="body1" color="text.secondary" gutterBottom>
               Be the first to start a game!
-            </Typography>            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateDialogOpen(true)}
-              disabled={!state.currentPlayer}
-              sx={{ mt: 2 }}
-            >
-              Create New Game
-            </Button>
+            </Typography>            
           </Box>
         ) : (
           <Box sx={{ 
